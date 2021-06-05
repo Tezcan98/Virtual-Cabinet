@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.cardview.widget.CardView
+
+        android:layout_width="match_parent"
+        android:layout_height="679dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="@color/card1"
+        app:cardCornerRadius="8dp">
+
+        <ImageButton
+            android:id="@+id/editbtn2"
+            android:layout_width="45dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="340dp"
+            android:layout_marginTop="70dp"
+            android:background="@drawable/edit"
+            android:translationZ="10dp"
+            />
+
+        <ImageView
+            android:id="@+id/imag"
+            android:layout_width="346dp"
+            android:layout_height="264dp"
+            android:layout_marginStart="33dp"
+            android:layout_marginTop="33dp"
+            android:padding="10dp"
+            android:src="@drawable/add_image" />
+
+        <TextView
+            android:id="@+id/clothes_infos"
+            android:layout_width="388dp"
+            android:layout_height="331dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="330dp"
+            android:text="Başlık\n\nTür \n\nRenk \n\nDesen \n\nFiyat\n\nAlınma Tarihi"
+            android:textAlignment="textStart"
+            android:textColor="@color/black"
+            android:textSize="20dp" />
+
+        <LinearLayout
+            android:id="@+id/edit_inputs"
+            android:layout_width="wrap_content"
+            android:layout_height="277dp"
+            android:layout_marginStart="160dp"
+            android:layout_marginTop="325dp"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/c_name"
+                android:layout_width="190dp"
+                android:layout_height="45dp"
+                android:ems="10"
+                android:text="" />
+
+            <EditText
+                android:id="@+id/tur"
+                android:layout_width="190dp"
+                android:layout_height="45dp"
+                android:ems="10"
+                android:text="" />
+
+            <EditText
+                android:id="@+id/renk"
+                android:layout_width="190dp"
+                android:layout_height="45dp"
+                android:ems="10"
+                android:text="" />
+
+            <EditText
+                android:id="@+id/desen"
+                android:layout_width="190dp"
+                android:layout_height="45dp"
+                android:ems="10"
+                android:text="" />
+
+            <EditText
+                android:id="@+id/fiyat"
+                android:layout_width="190dp"
+                android:layout_height="45dp"
+                android:ems="10"
+                android:inputType="numberDecimal" />
+
+            <EditText
+                android:id="@+id/date_input"
+                android:layout_width="190dp"
+                android:layout_height="45dp"
+                android:ems="10"
+                android:inputType="date" />
+            />
+
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/kaydet"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="120dp"
+            android:layout_marginTop="600dp"
+            android:text="Kaydet" />
+
+    </androidx.cardview.widget.CardView>
+</LinearLayout>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background3"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="379dp"
+        android:layout_marginTop="10dp">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+
+    <LinearLayout
+        android:layout_width="202dp"
+        android:layout_height="211dp"
+        android:layout_marginStart="120dp"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/create_dolap"
+            android:layout_width="200dp"
+            android:layout_height="70dp"
+            android:backgroundTint="@color/btn"
+            android:text="Dolap  Oluştur" />
+
+        <Button
+            android:id="@+id/go_cabin"
+            android:layout_width="200dp"
+            android:layout_height="70dp"
+            android:backgroundTint="@color/btn"
+            android:text="Kabine Git" />
+
+        <Button
+            android:id="@+id/go_activity"
+            android:layout_width="200dp"
+            android:layout_height="70dp"
+            android:backgroundTint="@color/btn"
+            android:text="Etkinliklerim"
+            android:textSize="12sp"
+
+            />
+    </LinearLayout>
+
+</LinearLayout>
