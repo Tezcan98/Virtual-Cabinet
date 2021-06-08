@@ -4,17 +4,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.KeyEvent;
+import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class WardropScreen extends AppCompatActivity {
@@ -23,6 +27,8 @@ public class WardropScreen extends AppCompatActivity {
     private DatabaseHelper db;
     private AdapterClothes cAdapter;
     public ImageView targetIw;
+    public Bitmap ImageBitmap = null;  // TODO bir ekranı editlerken diğerindeki resmi değiştirince yanlıslık olacak daha sonra bakarsın.
+
 
     private static final int REQUEST_IMAGE_CAPTURE = 2;
     private static final int PICK_IMAGE = 1;
@@ -53,18 +59,67 @@ public class WardropScreen extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode == RESULT_OK)
             if(requestCode == PICK_IMAGE){
-                Uri imageUri = data.getData();
-                targetIw.setImageURI(imageUri);
+
+                try {
+                    ImageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+                    targetIw.setImageBitmap(ImageBitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
             else
                 if(requestCode == REQUEST_IMAGE_CAPTURE){
                     Bundle extras = data.getExtras();
-                    Bitmap imageBitmap = (Bitmap) extras.get("data");
-                    targetIw.setImageBitmap(imageBitmap);
+                    ImageBitmap = (Bitmap) extras.get("data");
+                    targetIw.setImageBitmap(ImageBitmap);
+
                 }
 
 
         }
+
+
+    public File saveImage(String pictureFile) throws FileNotFoundException {
+        if (ImageBitmap != null) {
+            File picName = getOutputMediaFile(pictureFile);
+            try {
+                FileOutputStream fos = new FileOutputStream(picName);
+                ImageBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                fos.close();
+                return picName;
+            } catch (FileNotFoundException e) {
+                return null;
+            } catch (IOException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private String getFileWithCorrectExtension(Uri uri)
+    {
+        String extension;
+        String attachFileName = uri.getPath().substring(uri.getPath().lastIndexOf('/') + 1);
+        ContentResolver contentResolver = getContentResolver();
+        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
+        extension= mimeTypeMap.getExtensionFromMimeType(contentResolver.getType(uri));
+        return attachFileName.split(":")[0]+"." +extension;
+    }
+
+    private  File getOutputMediaFile(String filename){
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
+                + "/Android/data/"
+                + getApplicationContext().getPackageName()
+                + "/images");
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                return null;
+            }
+        }
+        File mediaFile = new File(mediaStorageDir.getPath() + File.separator + filename+ ".jpg" );
+        return mediaFile;
+    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {

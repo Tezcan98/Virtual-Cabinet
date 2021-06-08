@@ -1,7 +1,6 @@
 package com.example.virtual_cabinet_16011089;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,7 +8,6 @@ import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -51,8 +49,8 @@ public class AdapterCombine extends RecyclerView.Adapter<AdapterCombine.CombineV
         Clothes clothes = clothesList[position];
         if (clothes == null){
             holder.c_name.setVisibility(View.INVISIBLE);
-            holder.imag.setImageResource(Integer.parseInt(images[position]));
-            holder.imag.setOnClickListener(new View.OnClickListener() {
+            holder.thisImageV.setImageResource(Integer.parseInt(images[position]));
+            holder.thisImageV.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     showCustomDialog(view, holder, position);
@@ -61,8 +59,8 @@ public class AdapterCombine extends RecyclerView.Adapter<AdapterCombine.CombineV
         }
         else{
             holder.c_name.setText(clothes.getName());
-            holder.imag.setImageResource(R.drawable.noimage);
             holder.c_name.setVisibility(View.VISIBLE);
+            holder.thisImageV.setImageURI(clothes.getUriFromStringPath(mCtx));
         }
     }
 
@@ -73,11 +71,11 @@ public class AdapterCombine extends RecyclerView.Adapter<AdapterCombine.CombineV
 
     public class CombineViewHolder extends RecyclerView.ViewHolder {
         TextView c_name;
-        ImageView imag;
+        ImageView thisImageV;
         public CombineViewHolder(@NonNull View itemView) {
             super(itemView);
             c_name = itemView.findViewById(R.id.info);
-            imag = itemView.findViewById(R.id.c_imag);
+            thisImageV = itemView.findViewById(R.id.c_imag);
         }
     }
     private void showCustomDialog(View view, CombineViewHolder holder, Integer position) {
@@ -112,8 +110,8 @@ public class AdapterCombine extends RecyclerView.Adapter<AdapterCombine.CombineV
                 Clothes clothes = expandableListDetail.get(expandableListTitle.get(groupPosition)).get(childPosition);
                 clothesList[position] = clothes;
                 holder.c_name.setText(clothes.getName());
-                holder.imag.setOnClickListener(null);
-                holder.imag.setImageResource(R.drawable.noimage);
+                holder.thisImageV.setOnClickListener(null);
+                holder.thisImageV.setImageURI(clothes.getUriFromStringPath(mCtx));
                 alertDialog.hide();
                 return false;
             }

@@ -1,5 +1,14 @@
 package com.example.virtual_cabinet_16011089;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+
+import androidx.core.content.FileProvider;
+
+import java.io.File;
+
 public class Clothes {
     private Integer ID;
     private String name;
@@ -7,20 +16,18 @@ public class Clothes {
     private String color;
     private String pattern;
     private Float cost;
-    private String image_path;
+    private String imagePath;
     private String date;
 
 
-    public Clothes() {
-    }
 
-    public Clothes(String name, String type, String color, String pattern, float cost, String image_path, String date) {
+    public Clothes(String name, String type, String color, String pattern, float cost, String imagePath, String date) {
         this.name = name;
         this.type = type;
         this.color = color;
         this.pattern = pattern;
         this.cost = cost;
-        this.image_path = image_path;
+        this.imagePath = imagePath;
         this.date = date;
     }
 
@@ -39,13 +46,7 @@ public class Clothes {
         return cost;
     }
 
-    public String getImagePath() {
-        return image_path;
-    }
 
-    public void setImagePath(String image_path) {
-        this.image_path = image_path;
-    }
 
     public void setName(String name) {
         this.name = name;
@@ -65,10 +66,6 @@ public class Clothes {
 
     public void setCost(Float cost) {
         this.cost = cost;
-    }
-
-    public void setImage_path(String image_path) {
-        this.image_path = image_path;
     }
 
     public void setDate(String date) {
@@ -108,5 +105,22 @@ public class Clothes {
 
     public String getDate() {
         return date;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+    public Uri getUriFromStringPath(Context context) {
+        File file = new File(this.imagePath);
+        return FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", file);
+    }
+
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public void returnImageBitmap() {
+
     }
 }

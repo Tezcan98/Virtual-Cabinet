@@ -104,7 +104,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + location + " TEXT,"
                 + "FOREIGN KEY("+combine_id+") REFERENCES "+COMBINE_TABLE+"(id) ON DELETE CASCADE)";
 
-        ;
+
+
+
         db.execSQL(CREATE_ACTIVITY);
 
     }
@@ -134,8 +136,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valuesClothesTable.put(this.cost, cost);
         valuesClothesTable.put(this.image_path, image_path);
         valuesClothesTable.put(this.c_date, c_date);
-        Log.d("*/", String.valueOf(clothes.getID()));
-        Log.d("*/", String.valueOf(newClothes));
         if (newClothes)
             db.insert(CLOTHES_TABLE, null, valuesClothesTable );
         else
@@ -211,10 +211,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String color = cursor.getString(4);
                 String pattern = cursor.getString(5);
                 float cost = cursor.getFloat(6);
-                String image_path = cursor.getString(7);
+                String imagePath = cursor.getString(7);
                 String date = cursor.getString(8);
 
-                Clothes dummyClothes = new Clothes(name, type, color, pattern, cost, image_path, date);
+                Clothes dummyClothes = new Clothes(name, type, color, pattern, cost, imagePath, date);
                 dummyClothes.setID(id);
                 clothesList.add(dummyClothes);
             } while(cursor.moveToNext());
@@ -236,11 +236,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String color = cursor.getString(4);
                 String pattern = cursor.getString(5);
                 float cost = cursor.getFloat(6);
-                String image_path = cursor.getString(7);
+                String imagePath = cursor.getString(7);
                 String date = cursor.getString(8);
                 ClothesNumberList.add(cursor.getInt(12));
 
-                Clothes dummyClothes = new Clothes(name, type, color, pattern, cost, image_path, date);
+                Clothes dummyClothes = new Clothes(name, type, color, pattern, cost, imagePath, date);
                 dummyClothes.setID(id);
                 clothesList.add(dummyClothes);
             } while(cursor.moveToNext());
@@ -270,8 +270,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Wardrop dummyWardrop = new Wardrop(id, name);
                 dummyWardrop.setClothesCount((int)count);
                 WardropList.add(dummyWardrop);
-
-                // Do something Here with values
             } while(cursor.moveToNext());
         }
         return WardropList;
@@ -289,13 +287,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String a_type = cursor.getString(2);
                 String a_date = cursor.getString(3);
                 String location = cursor.getString(4);
-
-
                 Activity Dummyactivity = new Activity(name, a_type, a_date, location);
                 Dummyactivity.setId(id);
                 ActivityList.add(Dummyactivity);
-
-                // Do something Here with values
             } while(cursor.moveToNext());
         }
         return ActivityList;
@@ -349,7 +343,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase arg0, int arg1, int arg2) {
-        // TODO Auto-generated method stub
 
     }
 

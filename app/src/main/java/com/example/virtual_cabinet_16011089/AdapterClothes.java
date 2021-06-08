@@ -1,11 +1,12 @@
 package com.example.virtual_cabinet_16011089;
 
 import android.app.DatePickerDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,11 +23,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.Serializable;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Calendar;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
     private static final int PICK_IMAGE = 1;
     private Clothes thisClothes;
 
-    public AdapterClothes(Context mCtx,   List<Clothes> clothesList, DatabaseHelper db, Integer wNo) {
+    public AdapterClothes(Context mCtx, List<Clothes> clothesList, DatabaseHelper db, Integer wNo) {
         this.mCtx = mCtx;
         this.clothesList = clothesList;
         this.db = db;
@@ -69,6 +70,7 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
 
     @Override
     public void onBindViewHolder(@NonNull ClothesViewHolder holder, int position) {
+
 
         holder.editbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,16 +113,18 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
 
 
 
-
-        if(position < clothesList.size() ){
+        if(position < clothesList.size()){
+//            editMode = false;
             holder.editInputs.setVisibility(View.INVISIBLE);
             holder.kaydet.setVisibility(View.INVISIBLE);
             holder.editbtn.setVisibility(View.VISIBLE);
             thisClothes = clothesList.get(position); // pos = 0 for new clothes
             holder.c_info.setText(thisClothes.toString());
+            holder.thisImagView.setImageURI(thisClothes.getUriFromStringPath(mCtx));
 
-//            holder.imag.setImageResource(Integer.parseInt(thisClothes.getImagePath()));
+
         }else{
+//            editMode = true;
             holder.editInputs.setVisibility(View.VISIBLE);
             holder.kaydet.setVisibility(View.VISIBLE);
             holder.editbtn.setVisibility(View.INVISIBLE);
@@ -132,17 +136,13 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
             holder.desen.setText("");
             holder.fiyat.setText("");
             holder.date.setText("");
-
-
-
         }
 
 
         holder.kaydet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String baslik, tur, renk, desen, fiyat, date;
-                String imagePath = "";
+                String baslik, tur, renk, desen, fiyat, date, img;
                 baslik = holder.baslik.getText().toString();
                 tur = holder.tur.getText().toString();
                 renk = holder.renk.getText().toString();
@@ -151,6 +151,13 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
                 date = holder.date.getText().toString();
                 if (fiyat.isEmpty())
                     fiyat = "0.0f";
+                File saved = null;
+                try {
+                    saved = ((WardropScreen)mCtx).saveImage(baslik);
+                    holder.thisImagView.setImageResource(R.drawable.add_image);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
 
                 if(editMode){
                     thisClothes.setName(baslik);
@@ -159,14 +166,16 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
                     thisClothes.setPattern(desen);
                     thisClothes.setCost(Float.valueOf(fiyat));
                     thisClothes.setDate(date);
+                    Log.d("fds",saved.getAbsolutePath());
+                    thisClothes.setImagePath(saved.getAbsolutePath());
                     db.updateInsertClothes(thisClothes, wNo, !editMode);
                     Toast.makeText(mCtx.getApplicationContext(),"Kıyafet Bilgileri Güncellendi.",Toast.LENGTH_SHORT).show();
                     editMode = false;
                     holder.editbtn.setBackgroundResource(R.drawable.edit);
                 }
                 else{
+                    Clothes thisClothes = new Clothes(baslik, tur, renk, desen, Float.valueOf(fiyat), saved.getAbsolutePath(),date);
                     db.updateInsertClothes(thisClothes, wNo, !editMode); // if not editmode so it's new insert
-                    Clothes thisClothes = new Clothes(baslik, tur, renk, desen, Float.valueOf(fiyat), imagePath,date);
                     clothesList.add(thisClothes);
                     Toast.makeText(mCtx.getApplicationContext(),"Kıyafet Bilgileri Olusturuldu.",Toast.LENGTH_SHORT).show();
                 }
@@ -175,37 +184,37 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
 //                    onBindViewHolder(holder,position);
             }
         });
-        holder.imag.setOnClickListener(new View.OnClickListener() {
+        holder.thisImagView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String[] items = new String[]{"Camera", "Gallery","Cancel"};
-                AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
-                builder.setTitle("Resim Seç");
-                builder.setItems(items, new DialogInterface.OnClickListener() {
+                if (position >= clothesList.size() || editMode ){
+                    final String[] items = new String[]{"Camera", "Gallery","Cancel"};
+                    AlertDialog.Builder builder = new AlertDialog.Builder(mCtx);
+                    builder.setTitle("Resim Seç");
+                    builder.setItems(items, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int item) {
+                            ((WardropScreen)mCtx).targetIw = holder.thisImagView;
+                            if (items[item].equals("Camera")) {
 
+                                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                    public void onClick(DialogInterface dialog, int item) {
-                        ((WardropScreen)mCtx).targetIw = holder.imag;
-                        if (items[item].equals("Camera")) {
+                                ((WardropScreen) mCtx).startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
 
-                            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            } else if (items[item].equals("Gallery")) {
 
-                            ((WardropScreen) mCtx).startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                                Intent intent = new Intent();
+                                intent.setType("image/*");
+                                intent.setAction(Intent.ACTION_GET_CONTENT);
+                                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                                ((WardropScreen) mCtx).startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
 
-                        } else if (items[item].equals("Gallery")) {
-
-                            Intent intent = new Intent();
-                            intent.setType("image/*");
-                            intent.setAction(Intent.ACTION_GET_CONTENT);
-                            intent.addCategory(Intent.CATEGORY_OPENABLE);
-                            ((WardropScreen) mCtx).startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
-
-                        } else if (items[item].equals("Cancel")) {
-                            dialog.dismiss();
+                            } else if (items[item].equals("Cancel")) {
+                                dialog.dismiss();
+                            }
                         }
-                    }
-                });
-                builder.show();
+                    });
+                    builder.show();
+                }
             }
         });
         holder.date.setOnTouchListener(new View.OnTouchListener() {
@@ -233,16 +242,14 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
     }
 
 
-
     @Override
     public int getItemCount() {
         return clothesList.size()+1;
     }
 
 
-
     public class ClothesViewHolder extends RecyclerView.ViewHolder {
-        ImageView imag;
+        ImageView thisImagView;
         TextView c_info;
         EditText baslik,tur, renk, desen, fiyat, date;
         Button kaydet;
@@ -251,7 +258,7 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
         public ClothesViewHolder(@NonNull View itemView) {
             super(itemView);
             c_info = itemView.findViewById(R.id.clothes_infos);
-            imag = itemView.findViewById(R.id.imag);
+            thisImagView = itemView.findViewById(R.id.imag);
             baslik = itemView.findViewById(R.id.c_name);
             tur = itemView.findViewById(R.id.tur);
             renk = itemView.findViewById(R.id.renk);
