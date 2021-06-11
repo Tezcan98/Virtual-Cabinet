@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import androidx.core.content.FileProvider;
 
@@ -46,8 +48,6 @@ public class Clothes {
         return cost;
     }
 
-
-
     public void setName(String name) {
         this.name = name;
     }
@@ -84,13 +84,6 @@ public class Clothes {
     }
 
 
-    public void setFeatures(String type, String color, String pattern, Float cost) {
-        this.type = type;
-        this.color = color;
-        this.pattern = pattern;
-        this.cost = cost;
-    }
-
     public String getName() {
         return name;
     }
@@ -110,7 +103,10 @@ public class Clothes {
     public String getImagePath() {
         return imagePath;
     }
+
     public Uri getUriFromStringPath(Context context) {
+        if(this.imagePath == null)
+            return null;
         File file = new File(this.imagePath);
         return FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", file);
     }
@@ -123,4 +119,6 @@ public class Clothes {
     public void returnImageBitmap() {
 
     }
+
+
 }

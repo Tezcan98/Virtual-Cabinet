@@ -5,6 +5,7 @@ import android.location.Location;
 import java.util.Date;
 
 public class Activity {
+
     private Integer id;
     private String name;
     private String type;
@@ -12,11 +13,12 @@ public class Activity {
     private String targetLocation;
     private Combine selectedCombine;
 
-    public Activity(String name, String type, String date, String targetLocation) {
+    public Activity(String name, String type, String date, String targetLocation, Combine selectedCombine) {
         this.name = name;
         this.type = type;
         this.date = date;
         this.targetLocation = targetLocation;
+        this.selectedCombine = selectedCombine;
     }
 
     public String getName() {
@@ -59,8 +61,8 @@ public class Activity {
         this.targetLocation = targetLocation;
     }
 
-    public Combine getSelectedCombine() {
-        return selectedCombine;
+    public int getSelectedCombineId() {
+        return selectedCombine.getID();
     }
 
     public void setSelectedCombine(Combine selectedCombine) {
@@ -70,9 +72,10 @@ public class Activity {
     @Override
     public String toString() {
         return
-                "İsmi=           " + name  +
-                "\n\nTipi=       " + type  +
-                "\n\nTarihi=     " + date  +
-                "\n\nLokasyonu=  " + targetLocation ;
+                "İsmi=              " + name  +
+                "\n\nTipi=          " + type  +
+                "\n\nTarihi=        " + date  +
+                "\n\nLokasyonu=     " + targetLocation +
+                "\n\nKombin İsmi =  " + this.selectedCombine.getTag();
     }
 }

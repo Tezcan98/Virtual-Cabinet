@@ -1,6 +1,10 @@
 package com.example.virtual_cabinet_16011089;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +15,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +28,7 @@ public class AdapterCombine extends RecyclerView.Adapter<AdapterCombine.CombineV
     private Clothes[] clothesList;
     private DatabaseHelper db;
     private String[] images;
-    private ViewGroup parent;
+    private int REQUEST_IMAGE_CAPTURE = 1;
 
     public AdapterCombine(Context mCtx, Clothes[] clothesList, DatabaseHelper db) {
         this.mCtx = mCtx;
@@ -40,28 +46,45 @@ public class AdapterCombine extends RecyclerView.Adapter<AdapterCombine.CombineV
     public CombineViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mCtx);
         View view = inflater.inflate(R.layout.cabin_room, null);
-        this.parent = parent;
         return new CombineViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CombineViewHolder holder, int position) {
-        Clothes clothes = clothesList[position];
-        if (clothes == null){
+        Clothes clothes = clothesList[0];
+        if(position > 1) // 0 sapka 1 yuz 2 kazak
+            clothes = clothesList[position-1];
+
+        if(position == 1)
+        {
             holder.c_name.setVisibility(View.INVISIBLE);
-            holder.thisImageV.setImageResource(Integer.parseInt(images[position]));
-            holder.thisImageV.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    showCustomDialog(view, holder, position);
+            holder.thisImageV.setImageResource(Integer.parseInt(images[1]));
+            Uri faceUri =  ((CabinRoom)mCtx).faceUri;
+            holder.thisImageV.setImageURI(faceUri);
+        }
+        else
+            if (clothes == null){
+                holder.c_name.setVisibility(View.INVISIBLE);
+                holder.thisImageV.setImageResource(Integer.parseInt(images[position]));
+            }
+            else{
+                    holder.thisImageV.setImageURI(clothes.getUriFromStringPath(mCtx));
+                    holder.c_name.setText(clothes.getName());
+                    holder.c_name.setVisibility(View.VISIBLE);
+            }
+
+        holder.thisImageV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(position == 1){
+                    ((CabinRoom) mCtx).faceShow = holder.thisImageV;
+                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    ((CabinRoom) mCtx).startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                 }
-            });
-        }
-        else{
-            holder.c_name.setText(clothes.getName());
-            holder.c_name.setVisibility(View.VISIBLE);
-            holder.thisImageV.setImageURI(clothes.getUriFromStringPath(mCtx));
-        }
+                else
+                    showCustomDialog(view, holder, (position == 0 ? 0 : position-1));  // 0 , 2, 3 ve 4. poslar dolmalı
+            }
+        });
     }
 
     @Override
@@ -110,7 +133,6 @@ public class AdapterCombine extends RecyclerView.Adapter<AdapterCombine.CombineV
                 Clothes clothes = expandableListDetail.get(expandableListTitle.get(groupPosition)).get(childPosition);
                 clothesList[position] = clothes;
                 holder.c_name.setText(clothes.getName());
-                holder.thisImageV.setOnClickListener(null);
                 holder.thisImageV.setImageURI(clothes.getUriFromStringPath(mCtx));
                 alertDialog.hide();
                 return false;

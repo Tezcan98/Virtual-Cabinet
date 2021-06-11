@@ -13,10 +13,8 @@ import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    // Database Version
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
-    // Database Name
     private static final String DATABASE_NAME = "sqllite_database";
 
 
@@ -41,6 +39,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private final String COMBINE_TABLE = "kombin_tablosu";
     private String c_tag = "kombin_etiketi";
+    private String face_image_path = "yuz_path";
     private String p_activity = "gosterdigi_etkinlik";
 
     private final String COMBINE_CLOTHES_TABLE = "kombin_kiyafet_tablosu";
@@ -82,8 +81,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String CREATE_COMBINE = "CREATE TABLE " + COMBINE_TABLE + "("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 +  c_tag + " TEXT,"
-                +  p_activity + " INTEGER, "
-                + "FOREIGN KEY("+p_activity+") REFERENCES "+ACTIVITY_TABLE+"(id))";
+                +  face_image_path + " TEXT)";
         db.execSQL(CREATE_COMBINE);
 
         String CREATE_PAIR = "CREATE TABLE " + COMBINE_CLOTHES_TABLE + "("
@@ -147,13 +145,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String type = activity.getType();
             String Date = activity.getDate();
             String Location = activity.getTargetLocation();
+            int foreign_combine = activity.getSelectedCombineId();
             SQLiteDatabase db = this.getWritableDatabase();
             ContentValues valuesClothesTable = new ContentValues();
             valuesClothesTable.put(this.name, name);
             valuesClothesTable.put(this.a_type, type);
             valuesClothesTable.put(this.a_date, Date);
             valuesClothesTable.put(this.location, Location);
-            valuesClothesTable.put(this.combine_id, Location);
+            valuesClothesTable.put(this.combine_id, foreign_combine);
             if (newActivities)
                 db.insert(ACTIVITY_TABLE, null, valuesClothesTable );
             else
@@ -161,14 +160,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
 
-    public Combine createCombine(Clothes[] clothesList, String CombineTag) {
+    public Combine createCombine(Clothes[] clothesList, Combine combine) {
+        String CombineTag = combine.getTag();
+        String facePath = combine.getFacePath();
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues combineValues = new ContentValues();
         combineValues.put(c_tag, CombineTag);
-        int combine_id = (int) db.insert(COMBINE_TABLE, null, combineValues);
-        Combine combine = new Combine(combine_id, CombineTag);
+        combineValues.put(face_image_path, facePath);
 
-        for(int i=0; i<5; i++){
+        int combine_id = (int) db.insert(COMBINE_TABLE, null, combineValues);
+        combine.setID(combine_id);
+
+        for(int i=0; i<4; i++){
             if (clothesList[i] != null){
                 Clothes clothes = clothesList[i];
                 ContentValues pairs = new ContentValues();
@@ -183,14 +186,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public Combine updateCombine(Clothes[] clothesList, Combine combine) {
             SQLiteDatabase db = this.getWritableDatabase();
-            for(int i=0; i<5; i++){
+
+        ContentValues combineValues = new ContentValues();
+        combineValues.put(face_image_path, combine.getFacePath());
+        db.update(COMBINE_TABLE, combineValues, "id = '" + combine.getID  ()+"'" ,null );
+
+            for(int i=0; i<4; i++){
                 if (clothesList[i] != null){
+                    String selectQuery = "SELECT * FROM '" + COMBINE_CLOTHES_TABLE + "' where " + this.clothes_number +  "= '" + i +"' and  " + this.combine_id + "= '"+combine.getID()+"'";
+                    Cursor cursor = db.rawQuery(selectQuery, null);
+                    Boolean exist = false;
+                    if (cursor.moveToFirst()){
+                        exist = true;
+                    }
+
                     Clothes clothes = clothesList[i];
                     ContentValues pairs = new ContentValues();
                     pairs.put(this.clothes_id, clothes.getID());
-                    pairs.put(this.combine_id, combine_id);
+                    pairs.put(this.combine_id, combine.getID());
                     pairs.put(this.clothes_number, i);
-                    db.update(COMBINE_CLOTHES_TABLE, pairs, this.clothes_number +  "= '" + i +"' and  " + this.combine_id + "= '"+combine_id+"'", null);
+
+                    if(!exist)
+                        db.insert(COMBINE_CLOTHES_TABLE, null, pairs);
+                    else
+                        db.update(COMBINE_CLOTHES_TABLE, pairs, this.clothes_number +  "= '" + i +"' and  " + this.combine_id + "= '"+combine.getID()+"'", null);
                     combine.addClothes(i, Math.toIntExact(clothes.getID()));
                 }
             }
@@ -278,7 +297,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
        public List<Activity> returnActivities(){
         List<Activity> ActivityList = new ArrayList<Activity>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String selectQuery = "SELECT * FROM '" + ACTIVITY_TABLE + "'";
+        String selectQuery = "SELECT * FROM '" + ACTIVITY_TABLE + "' activity INNER JOIN '" + COMBINE_TABLE + "' combine ON activity.combine_id = combine.id";
         Cursor cursor = db.rawQuery(selectQuery, null);
         if (cursor.moveToFirst()){
             do {
@@ -286,10 +305,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String name = cursor.getString(1);
                 String a_type = cursor.getString(2);
                 String a_date = cursor.getString(3);
-                String location = cursor.getString(4);
-                Activity Dummyactivity = new Activity(name, a_type, a_date, location);
+                int foreign_id = cursor.getInt(4);
+                String location = cursor.getString(5);
+                int combine_id = cursor.getInt(6);
+                String c_tag = cursor.getString(7);
+                String face_image_path = cursor.getString(8);
+
+                Combine dummyCombine = new Combine(c_tag,face_image_path);
+                dummyCombine.setID(combine_id);
+                Activity Dummyactivity = new Activity(name, a_type, a_date, location, dummyCombine);
                 Dummyactivity.setId(id);
                 ActivityList.add(Dummyactivity);
+
+
             } while(cursor.moveToNext());
         }
         return ActivityList;
@@ -306,7 +334,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             do {
                 Integer id = cursor.getInt(0);
                 String tag = cursor.getString(1);
-                Combine dummyCombine = new Combine(id, tag);
+                String facePath = cursor.getString(2);
+                Combine dummyCombine = new Combine(tag, facePath);
+                dummyCombine.setID(id);
                 CombinesList.add(dummyCombine);
 
                 // Do something Here with values

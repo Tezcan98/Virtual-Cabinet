@@ -59,9 +59,12 @@ public class AdapterActivity extends RecyclerView.Adapter<AdapterActivity.Combin
             public void onClick(View view) {
                 if(!editMode){
                     editMode = true;
+                    holder.inputs.setVisibility(View.VISIBLE);
+                    holder.save.setVisibility(View.VISIBLE);
+
                     holder.editbtn.setBackgroundResource(R.drawable.delete);
                     holder.save.setText("Etkinliği Güncelle");
-                    holder.a_infos.setText("İsmi\n\nTürü \n\nTarihi \n\nKonum");
+                    holder.a_infos.setText("İsmi\n\nTürü \n\nTarihi \n\nKonum\n\nKombin İsmi");
                     thisActivity = activityList.get(position);
                     holder.ism.setText(thisActivity.getName());
                     holder.tur.setText(thisActivity.getType());
@@ -76,7 +79,7 @@ public class AdapterActivity extends RecyclerView.Adapter<AdapterActivity.Combin
                                 @Override
                                 public void onClick(DialogInterface dialog, int which)
                                 {
-                                     db.deleteActivity(thisActivity.getId());
+                                    db.deleteActivity(thisActivity.getId());
                                     activityList.remove(thisActivity);
                                     notifyItemRemoved(position);
                                     editMode = false;
@@ -88,17 +91,18 @@ public class AdapterActivity extends RecyclerView.Adapter<AdapterActivity.Combin
             }
         });
 
-        if(position < activityList.size() && !editMode){
-            holder.inputs.setVisibility(View.INVISIBLE);
-            holder.editbtn.setVisibility(View.INVISIBLE);
-            thisActivity = activityList.get(position);
-            holder.a_infos.setText(thisActivity.toString());
-        }
-        else
-        {
-            holder.inputs.setVisibility(View.VISIBLE);
-            holder.editbtn.setVisibility(View.VISIBLE);
-        }
+            if(position < activityList.size()){
+                holder.editbtn.setVisibility(View.VISIBLE);
+                holder.inputs.setVisibility(View.INVISIBLE);
+                thisActivity = activityList.get(position);
+                holder.a_infos.setText(thisActivity.toString());
+            }
+            else
+            {
+                holder.editbtn.setVisibility(View.INVISIBLE);
+                holder.inputs.setVisibility(View.VISIBLE);
+                holder.save.setVisibility(View.VISIBLE);
+            }
 
 
         List<Combine> cList;
@@ -124,10 +128,10 @@ public class AdapterActivity extends RecyclerView.Adapter<AdapterActivity.Combin
                 Combine selectedCombine = cList.get(combineIdx);
 
                 if (!editMode){
-                    thisActivity = new Activity(name, tur, date, lokasyon);
+                    thisActivity = new Activity(name, tur, date, lokasyon, selectedCombine);
+                    activityList.add(thisActivity);
                     db.updateInsertActivity(thisActivity,!editMode);  // mean if not editMode so it's new
                     Toast.makeText(mCtx.getApplicationContext(),"Etkinlik Oluşturuldu, iyi eğlenceler !.",Toast.LENGTH_SHORT).show();
-                    notifyItemInserted(position);
                 }
                 else{
                     thisActivity.setName(name);
@@ -139,9 +143,9 @@ public class AdapterActivity extends RecyclerView.Adapter<AdapterActivity.Combin
                     Toast.makeText(mCtx.getApplicationContext(),"Etkinlik bilgileri güncellendi, iyi eğlenceler !.",Toast.LENGTH_SHORT).show();
                     editMode = false;
                     holder.editbtn.setBackgroundResource(R.drawable.edit);
-                    notifyItemChanged(position);
 
                 }
+                notifyItemChanged(position);
 
             }
         });

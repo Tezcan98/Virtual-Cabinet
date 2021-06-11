@@ -27,8 +27,6 @@ public class AdapterChangeCombine extends RecyclerView.Adapter<AdapterChangeComb
     private String[] images;
     private ViewGroup parent;
     private Dialog dialog;
-    Combine clickedCombine;
-
     public AdapterChangeCombine(Context mCtx, List<Combine> combineList, Dialog dialog) {
         this.mCtx = mCtx;
         this.combineList = combineList;
@@ -55,7 +53,7 @@ public class AdapterChangeCombine extends RecyclerView.Adapter<AdapterChangeComb
 
             @Override
             public void onClick(View view) {
-                clickedCombine = thisCombine;
+                ((CabinRoom)mCtx).thisCombine = thisCombine;
                 dialog.dismiss();
             }
         });

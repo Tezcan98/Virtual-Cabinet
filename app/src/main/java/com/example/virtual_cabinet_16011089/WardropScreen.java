@@ -80,14 +80,14 @@ public class WardropScreen extends AppCompatActivity {
         }
 
 
-    public File saveImage(String pictureFile) throws FileNotFoundException {
+    public String saveImage(String pictureFile){
         if (ImageBitmap != null) {
             File picName = getOutputMediaFile(pictureFile);
             try {
                 FileOutputStream fos = new FileOutputStream(picName);
                 ImageBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
                 fos.close();
-                return picName;
+                return picName.getAbsolutePath();
             } catch (FileNotFoundException e) {
                 return null;
             } catch (IOException e) {
@@ -95,16 +95,6 @@ public class WardropScreen extends AppCompatActivity {
             }
         }
         return null;
-    }
-
-    private String getFileWithCorrectExtension(Uri uri)
-    {
-        String extension;
-        String attachFileName = uri.getPath().substring(uri.getPath().lastIndexOf('/') + 1);
-        ContentResolver contentResolver = getContentResolver();
-        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-        extension= mimeTypeMap.getExtensionFromMimeType(contentResolver.getType(uri));
-        return attachFileName.split(":")[0]+"." +extension;
     }
 
     private  File getOutputMediaFile(String filename){

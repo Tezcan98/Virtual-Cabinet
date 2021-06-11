@@ -44,6 +44,7 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
     private static final int REQUEST_IMAGE_CAPTURE = 2;
     private static final int PICK_IMAGE = 1;
     private Clothes thisClothes;
+    private String saved = null;
 
     public AdapterClothes(Context mCtx, List<Clothes> clothesList, DatabaseHelper db, Integer wNo) {
         this.mCtx = mCtx;
@@ -114,7 +115,6 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
 
 
         if(position < clothesList.size()){
-//            editMode = false;
             holder.editInputs.setVisibility(View.INVISIBLE);
             holder.kaydet.setVisibility(View.INVISIBLE);
             holder.editbtn.setVisibility(View.VISIBLE);
@@ -124,7 +124,6 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
 
 
         }else{
-//            editMode = true;
             holder.editInputs.setVisibility(View.VISIBLE);
             holder.kaydet.setVisibility(View.VISIBLE);
             holder.editbtn.setVisibility(View.INVISIBLE);
@@ -151,13 +150,12 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
                 date = holder.date.getText().toString();
                 if (fiyat.isEmpty())
                     fiyat = "0.0f";
-                File saved = null;
-                try {
-                    saved = ((WardropScreen)mCtx).saveImage(baslik);
+                saved = null;
+
+                saved = ((WardropScreen)mCtx).saveImage(baslik);
+                if (saved != null)
                     holder.thisImagView.setImageResource(R.drawable.add_image);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+
 
                 if(editMode){
                     thisClothes.setName(baslik);
@@ -166,15 +164,14 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
                     thisClothes.setPattern(desen);
                     thisClothes.setCost(Float.valueOf(fiyat));
                     thisClothes.setDate(date);
-                    Log.d("fds",saved.getAbsolutePath());
-                    thisClothes.setImagePath(saved.getAbsolutePath());
+                    thisClothes.setImagePath(saved);
                     db.updateInsertClothes(thisClothes, wNo, !editMode);
                     Toast.makeText(mCtx.getApplicationContext(),"Kıyafet Bilgileri Güncellendi.",Toast.LENGTH_SHORT).show();
                     editMode = false;
                     holder.editbtn.setBackgroundResource(R.drawable.edit);
                 }
                 else{
-                    Clothes thisClothes = new Clothes(baslik, tur, renk, desen, Float.valueOf(fiyat), saved.getAbsolutePath(),date);
+                    Clothes thisClothes = new Clothes(baslik, tur, renk, desen, Float.valueOf(fiyat), saved,date);
                     db.updateInsertClothes(thisClothes, wNo, !editMode); // if not editmode so it's new insert
                     clothesList.add(thisClothes);
                     Toast.makeText(mCtx.getApplicationContext(),"Kıyafet Bilgileri Olusturuldu.",Toast.LENGTH_SHORT).show();
@@ -195,9 +192,7 @@ public class AdapterClothes extends RecyclerView.Adapter<AdapterClothes.ClothesV
                         public void onClick(DialogInterface dialog, int item) {
                             ((WardropScreen)mCtx).targetIw = holder.thisImagView;
                             if (items[item].equals("Camera")) {
-
                                 Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
                                 ((WardropScreen) mCtx).startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
 
                             } else if (items[item].equals("Gallery")) {

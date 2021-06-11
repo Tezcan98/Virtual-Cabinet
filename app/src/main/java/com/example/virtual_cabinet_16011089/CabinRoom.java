@@ -2,6 +2,7 @@ package com.example.virtual_cabinet_16011089;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -9,46 +10,55 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CabinRoom extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private DatabaseHelper db;
-    private Combine thisCombine;
-    private Button addCombine, change;
+    public Combine thisCombine;
+    public ImageView faceShow;
+    private Button addCombineButton, change;
     Clothes[] ClothesList;
     Boolean saved = false;
     private Dialog dialog;
     int clickedCombine;
     AdapterCombine cAdapter;
     AdapterChangeCombine wAdapter;
+    private Bitmap ImageBitmap = null;
+    public Uri faceUri;
+    private int PICK_IMAGE = 1;
+    private String facePath = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cabin_room);
         db = new DatabaseHelper(this);
 
-        ClothesList = new Clothes[5];
-
-        // todo 4.  madde e şıkkı kombinle eşle ~ 40dk
-        // ------------- 2:10 saat
-        // todo: resim, kamera, alma görüntüleme ~ 2 saat
-        // todo: genel hatalar test et ~1 saat
-        // -------------- 3 saat
-        // todo: video & gönderme ~ 1 saat
-
-
-        addCombine = findViewById(R.id.addCombine);
+        ClothesList = new Clothes[4];
+        addCombineButton = findViewById(R.id.addCombine);
         change = findViewById(R.id.change);
 
         recyclerView = findViewById(R.id.recyclerView2);
@@ -58,7 +68,7 @@ public class CabinRoom extends AppCompatActivity {
         cAdapter = new AdapterCombine(this, ClothesList, db);
         recyclerView.setAdapter(cAdapter);
 
-        addCombine.setOnClickListener(new View.OnClickListener() {
+        addCombineButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (!saved){
@@ -78,21 +88,22 @@ public class CabinRoom extends AppCompatActivity {
 
                     dialog.setPositiveButton("Tamam", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
-                            String combineName = combineText.getText().toString();
-                            thisCombine = db.createCombine(ClothesList, combineName);
-                            addCombine.setText("Kombini Güncelle");
 
+                            String combineName = combineText.getText().toString();
+                            faceUri = saveImage(ImageBitmap,combineName+"img.jpg");
+                            Combine combine = new Combine(combineName, facePath);
+                            thisCombine = db.createCombine(ClothesList, combine);
+                            addCombineButton.setText("Kombini Güncelle");
                             saved = true;
                             Toast.makeText(getApplicationContext(),"Kombin Kaydedildi", Toast.LENGTH_LONG).show();
                             shareCombine();
-
                         }
                     });
-
                     dialog.show();
-
                 }
                 else{
+                    faceUri = saveImage(ImageBitmap,thisCombine.getTag()+"img.jpg");
+                    thisCombine.setFacePath(facePath);
                     db.updateCombine(ClothesList, thisCombine);
                     Toast.makeText(getApplicationContext(),"Kombin Güncellendi", Toast.LENGTH_LONG).show();
                     shareCombine();
@@ -110,14 +121,13 @@ public class CabinRoom extends AppCompatActivity {
                 dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        thisCombine    = wAdapter.clickedCombine;
                         if (thisCombine != null){
+                            faceUri = thisCombine.getFaceUri(CabinRoom.this);
                             clickedCombine = thisCombine.getID();
                             ClothesList = db.returnPairClothes(clickedCombine);
                             cAdapter.setClothesList(ClothesList);
                             cAdapter.notifyItemRangeChanged(0,5);
-
-                            addCombine.setText("Kombini Güncelle");
+                            addCombineButton.setText("Kombini Güncelle");
                             saved = true;
                         }
                     }
@@ -153,27 +163,97 @@ public class CabinRoom extends AppCompatActivity {
         builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
 
             public void onClick(DialogInterface dialog, int which) {
-                // Do nothing but close the dialog
 
-                // TODO:  Kıyafet ismi ve resimleri paylaş
                 Intent share = new Intent();
                 share.setAction(Intent.ACTION_SEND);
-                share.setType("text/*");
-//        Uri uri = getUriForFile(mCtx, "com.enestezcan.fileprovider", storageDir);
-//        share.putExtra(Intent.EXTRA_STREAM,  uri);
-                CabinRoom.this.startActivity(Intent.createChooser(share, "share file with"));
+                share.setType("image/*");
+                List<Bitmap> resimler = new ArrayList<Bitmap>();
+                int width = 0, height=0;
+                Bitmap bitmap = null;
+                for(int i=0; i<4; i++){
+                    if(ClothesList[i] != null){
+                        Uri uri = ClothesList[i].getUriFromStringPath(CabinRoom.this);
+                        try {
+                            bitmap = MediaStore.Images.Media.getBitmap(CabinRoom.this.getContentResolver(), uri);
+
+
+                            resimler.add(bitmap);
+                            height += bitmap.getHeight();
+                            int thisWidth = bitmap.getWidth();
+                            if (thisWidth > width)
+                                width = thisWidth;
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                Bitmap result = Bitmap.createBitmap(width, height, bitmap.getConfig());
+                Canvas canvas = new Canvas(result);
+                int prevheight = 0;
+                for(Bitmap bm: resimler){
+                    canvas.drawBitmap(bm, 0f, prevheight , null);
+                    prevheight += bm.getHeight();
+                }
+
+                Uri sendUri = saveImage(result, "Kombinim.jpg");
+                share.putExtra(Intent.EXTRA_STREAM, sendUri);
+                Intent chooser = Intent.createChooser(share, "Kombinini ne ile paylaşacaksın ? ");
+                CabinRoom.this.startActivity(chooser);
 
                 dialog.dismiss();
             }
         });
-
-
-
         AlertDialog alert = builder.create();
         alert.show();
+    }
+    public Uri saveImage(Bitmap ImageBitmap, String pictureFile){
+        if (ImageBitmap != null) {
+            File picName = getOutputMediaFile(pictureFile);
+            try {
+                FileOutputStream fos = new FileOutputStream(picName);
+                ImageBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                fos.close();
+                facePath = picName.getAbsolutePath();
+                return FileProvider.getUriForFile(CabinRoom.this, BuildConfig.APPLICATION_ID + ".provider", picName);
+            } catch (FileNotFoundException e) {
+                return null;
+            } catch (IOException e) {
+                return null;
+            }
+        }
+        return null;
+    }
 
+
+
+
+    private  File getOutputMediaFile(String filename){
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
+                + "/Android/data/"
+                + getApplicationContext().getPackageName()
+                + "/images");
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                return null;
+            }
+        }
+        File mediaFile = new File(mediaStorageDir.getPath() + File.separator + filename );
+        return mediaFile;
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK)
+            if (requestCode == PICK_IMAGE)
+
+                ImageBitmap = (Bitmap) data.getExtras().get("data");
+                faceShow.setImageBitmap(ImageBitmap);
 
     }
+
 
 
 }
