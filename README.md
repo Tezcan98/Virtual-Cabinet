@@ -32,3 +32,8 @@ Content :
   
   ## ScreenShoots
 ![ss1](https://github.com/Tezcan98/Virtual-Cabinet/blob/main/ss1.png)
+
+From left to right
+1. Create a new shelf
+2. Choosing an image for the outfit
+3. Choosing clothes from the shelf for the outfit
