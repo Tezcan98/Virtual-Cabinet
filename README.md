@@ -31,4 +31,4 @@ Content :
   informing users with messages
   
   ## ScreenShoots
-![ss1](https://github.com/Tezcan98/Virtual-Cabinet/ss1.png)
+![ss1](https://github.com/Tezcan98/Virtual-Cabinet/blob/main/ss1.png)
